@@ -50,6 +50,19 @@ public class SettingsActivity extends Activity {
         save.setText("Save");
         save.setOnClickListener(v -> save());
         col.addView(save);
+
+        Button test = new Button(this);
+        test.setText("Send test alert");
+        test.setOnClickListener(v -> {
+            Deal d = new Deal();
+            d.id = "test:alert"; d.store = "Test"; d.source = "test";
+            d.name = "TEST: this is what a price-error alert looks like";
+            d.price = 199.99; d.reference = 1299.99; d.discountPct = 85; d.basis = "example";
+            d.url = "https://www.bestbuy.com";
+            Notifier.deal(this, d);
+            Toast.makeText(this, "Test alert sent. No popup? Check notification settings.", Toast.LENGTH_LONG).show();
+        });
+        col.addView(test);
         setContentView(sv);
     }
 
