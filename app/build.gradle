@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.dealfinder.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.dealfinder.app'
+        minSdk 26
+        targetSdk 35
+        // CI passes the run number so every new APK installs over the old one.
+        versionCode (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+        versionName "0.1.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
+    }
+
+    signingConfigs {
+        // A fixed key checked into the repo, so updates install over the
+        // previous version. Fine for a personal sideloaded app; never use it
+        // for a Play Store release.
+        sideload {
+            storeFile file('sideload.keystore')
+            storePassword 'dealfinder'
+            keyAlias 'dealfinder'
+            keyPassword 'dealfinder'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.sideload
+        }
+        debug {
+            signingConfig signingConfigs.sideload
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
