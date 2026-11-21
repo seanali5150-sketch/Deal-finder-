@@ -27,11 +27,19 @@ public class FeedSource implements Source {
         {"Slickdeals", "https://slickdeals.net/newsearch.php?q=laptop&searcharea=deals&searchin=first&sort=newest&rss=1"},
         {"Slickdeals", "https://slickdeals.net/newsearch.php?q=ipad&searcharea=deals&searchin=first&sort=newest&rss=1"},
         {"Slickdeals", "https://slickdeals.net/newsearch.php?q=unlocked+phone&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=price+mistake&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=glitch&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=macbook&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=iphone&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=galaxy&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=chromebook&searcharea=deals&searchin=first&sort=newest&rss=1"},
+        {"Slickdeals", "https://slickdeals.net/newsearch.php?q=gaming+pc&searcharea=deals&searchin=first&sort=newest&rss=1"},
         {"Reddit r/buildapcsales", "https://www.reddit.com/r/buildapcsales/new/.rss"},
         {"Reddit r/laptopdeals", "https://www.reddit.com/r/laptopdeals/new/.rss"},
         {"Reddit r/deals", "https://www.reddit.com/r/deals/new/.rss"},
     };
     private static final Pattern MONEY = Pattern.compile("\\$\\s?([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})?|[0-9]+(?:\\.[0-9]{2})?)");
+    private static final Pattern PCT_OFF = Pattern.compile("(?i)\\b([1-9][0-9])\\s?%\\s?off\\b");
     private static final Pattern STORE = Pattern.compile("(?i)\\b(?:at|@|from)\\s+(Best ?Buy|Amazon|Walmart|Target|Costco|Newegg|B&H|Dell|HP|Lenovo|Apple|Samsung|Micro ?Center|Sam'?s Club|Woot|eBay|Adorama|Antonline|Office ?Depot|Staples|Kohl'?s|Macy'?s)\\b");
 
     public String name() { return "Deal feeds"; }
@@ -88,6 +96,12 @@ public class FeedSource implements Source {
         double max = 0;
         for (double a : amounts) max = Math.max(max, a);
         if (max > d.price) d.listPrice = max;
+        // "75% off" in the title with only one price: work out the original price.
+        Matcher pct = PCT_OFF.matcher(title);
+        if (d.listPrice == 0 && d.price > 0 && pct.find()) {
+            int off = Integer.parseInt(pct.group(1));
+            d.listPrice = Math.round(d.price / (1 - off / 100.0) * 100) / 100.0;
+        }
         if (d.price > 0 && d.listPrice > 0 && d.listPrice < p.minPrice()) return null;
         Matcher s = STORE.matcher(title);
         d.store = s.find() ? s.group(1) : feed;
